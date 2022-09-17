@@ -1,0 +1,13 @@
+name: data_deal_pro
+mysql:
+  host: 127.0.0.250
+  port: 3306
+  user: "root"
+  password: "123456"
+  db: "news"
+log:
+  level: "debug"
+  filename: "deal_news.log"
+  max_size: 200
+  max_age: 30
+  max_backups: 7
