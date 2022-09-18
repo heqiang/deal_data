@@ -2,6 +2,7 @@ package global
 
 import (
 	"fmt"
+	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 )
 
@@ -20,4 +21,12 @@ func InitConfig(env string) {
 	if err := v.Unmarshal(&ServerConfig); err != nil {
 		panic(err)
 	}
+	//配置热加载
+	viper.WatchConfig()
+	viper.OnConfigChange(func(in fsnotify.Event) {
+		if err := viper.Unmarshal(&ServerConfig); err != nil {
+			panic(fmt.Errorf("unmarshal conf failed err:%s\n", err))
+		}
+	})
+	return
 }
