@@ -29,7 +29,7 @@ func NewTool(proxy string) *Tool {
 	}
 }
 
-func (tool *Tool) profileImgDownload(imgBasePath, fileName, url string) {
+func (tool *Tool) ProfileImgDownload(imgBasePath, fileName, url string) {
 	if !strings.HasPrefix(url, "http") {
 		msg := fmt.Sprintf("%s:no schema", url)
 		zap.L().Error(msg)
@@ -49,7 +49,7 @@ func (tool *Tool) profileImgDownload(imgBasePath, fileName, url string) {
 	fileDownload(completeProfilePath, fileName, resBytes)
 }
 
-func (tool *Tool) imgOrFileDownload(filePath, fileName, url, fileType string, newsId int) {
+func (tool *Tool) ImgOrFileDownload(filePath, fileName, url, fileType string, newsId int) {
 	filePathSuffix := fmt.Sprintf("%s_%s", tool.dateTimeStr, fileType)
 	completeFilePath := filepath.Join(filePath, filePathSuffix)
 
