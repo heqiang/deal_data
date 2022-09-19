@@ -112,15 +112,25 @@ func (d *DataDeal) transStrToList(newsItem string) []interface{} {
 }
 
 func (d *DataDeal) transContent(contents string) []contentsStruct {
+	//var newContent []contentsStruct
 	contentsList := d.transStrToList(contents)
 	if len(contentsList) != 1 {
 		for _, con := range contentsList {
-			con = con.(contentsStruct)
+			conStruct := con.(contentsStruct)
+			if conStruct.Type == "image" {
+				continue
+			}
 
 		}
 	}
 
 	return []contentsStruct{}
+}
+func (d *DataDeal) transImageOrFileCon(con contentsStruct, fileType string) map[string]interface{} {
+	newCon := make(map[string]interface{})
+	newCon["type"] = fileType
+	newCon["data"] = con
+	return newCon
 }
 
 func (d *DataDeal) transImageOrFileDict() {
