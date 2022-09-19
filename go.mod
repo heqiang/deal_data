@@ -3,7 +3,6 @@ module deal_data
 go 1.18
 
 require (
-	github.com/kirinlabs/HttpRequest v1.1.1
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/spf13/viper v1.13.0
 	go.uber.org/zap v1.17.0

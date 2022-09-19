@@ -70,15 +70,56 @@ func (d *DataDeal) fileDownload(content string, newsId int) {
 	}
 }
 
-func (d *DataDeal) TransNewsToJson(news mysqlservice.News) {
-	newMap := make(map[string]interface{})
-	newMap["news_id"] = news.Id
-	newMap["source_name"] = news.SourceName
-	newMap["site_domain"] = news.SiteDomain
-	newMap["content"] = d.transContent(news.Content)
+func (d *DataDeal) TransNewsToJson(news mysqlservice.News) map[string]interface{} {
+	newsMap := map[string]interface{}{
+		"news_id":           news.Id,
+		"source_name":       news.SourceName,
+		"site_domain":       news.SiteDomain,
+		"author":            d.transStrToList(news.Author),
+		"url":               news.Url,
+		"time":              news.PublishTime,
+		"site_board_name":   news.SiteBoardName,
+		"board_theme":       news.BoardTheme,
+		"if_front_position": news.IfFrontPosition,
+		"type":              "",
+		"crawl_time":        news.InsertTime,
+		"lang":              news.Lang,
+		"direction":         news.Direction,
+		"comment_count":     news.CommentCount,
+		"forward_count":     news.ForwardCount,
+		"like_count":        news.LikeCount,
+		"read_count":        news.ReadCount,
+		"original_tags":     d.transStrToList(news.OriginalTags),
+		"if_repost":         news.IfRepost,
+		"repost_source":     news.RepostSource,
+		"insert_time":       news.InsertTime,
+		"title":             news.Title,
+		"content":           d.transContent(news.Content),
+	}
+	return newsMap
+
+}
+
+func (d *DataDeal) transStrToList(newsItem string) []interface{} {
+	var resList []interface{}
+
+	err := json.Unmarshal([]byte(newsItem), &resList)
+	if err != nil {
+		zap.L().Warn("json 序列化失败")
+		return []interface{}{}
+	}
+	return resList
 }
 
 func (d *DataDeal) transContent(contents string) []contentsStruct {
+	contentsList := d.transStrToList(contents)
+	if len(contentsList) != 1 {
+		for _, con := range contentsList {
+			con = con.(contentsStruct)
+
+		}
+	}
+
 	return []contentsStruct{}
 }
 
