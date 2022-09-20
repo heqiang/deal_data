@@ -5,7 +5,10 @@ import (
 	"deal_data/global"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"log"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,7 +17,7 @@ import (
 
 type Tool struct {
 	header       string
-	dateTimeStr  string
+	DateTimeStr  string
 	time         string
 	filePath     string
 	imgPath      string
@@ -26,11 +29,11 @@ func NewTool(proxy string, filePath string) *Tool {
 	currTime := time.Now()
 	tool := &Tool{
 		header:      global.Header,
-		dateTimeStr: currTime.Format("20060102150405"),
+		DateTimeStr: currTime.Format("20060102150405"),
 		time:        currTime.Format("2006-01-02"),
 		proxy:       proxy,
 	}
-	jsonName := fmt.Sprintf("%s_newsty.json", tool.dateTimeStr)
+	jsonName := fmt.Sprintf("%s_newsty.json", tool.DateTimeStr)
 	tool.jsonPathName = filepath.Join(filePath, jsonName)
 	MkFile(tool.jsonPathName)
 	return tool
@@ -42,21 +45,21 @@ func (tool *Tool) ProfileImgDownload(imgBasePath, fileName, url string, uuid str
 		zap.L().Error(msg)
 	}
 
-	ProfilePathSuffix := fmt.Sprintf("%s_profile_image", tool.dateTimeStr)
+	ProfilePathSuffix := fmt.Sprintf("%s_profile_image", tool.DateTimeStr)
 	completeProfilePath := filepath.Join(imgBasePath, ProfilePathSuffix)
 
 	Mkdir(completeProfilePath)
 
-	fileDownload(completeProfilePath, fileName, url, tool.header, tool.proxy, uuid)
+	fileDownload(completeProfilePath, fileName, url, tool.proxy, uuid)
 }
 
 func (tool *Tool) ImgOrFileDownload(filePath, fileName, url, fileType string, newsId int) {
-	filePathSuffix := fmt.Sprintf("%s_%s", tool.dateTimeStr, fileType)
+	filePathSuffix := fmt.Sprintf("%s_%s", tool.DateTimeStr, fileType)
 	completeFilePath := filepath.Join(filePath, filePathSuffix)
 
 	Mkdir(completeFilePath)
 
-	fileDownload(completeFilePath, fileName, url, tool.header, tool.proxy, newsId)
+	fileDownload(completeFilePath, fileName, url, tool.proxy, newsId)
 }
 
 func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
@@ -75,4 +78,20 @@ func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
 	_, _ = writer.Write(strNews)
 	_ = writer.Flush()
 
+}
+
+func Parse(articleUrl string) string {
+	parse, err := url.Parse(articleUrl)
+	if err != nil {
+		return ""
+	}
+	return parse.Host
+}
+
+func GenUuid() string {
+	u1, err := uuid.NewUUID()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return u1.String()
 }

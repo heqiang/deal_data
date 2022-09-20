@@ -37,8 +37,8 @@ func MkFile(filePath string) {
 	}
 }
 
-func fileDownload(filePath, fileName string, url, header, proxy string, id interface{}) {
-	resBytes, err := Req(url, header, proxy)
+func fileDownload(filePath, fileName string, url, proxy string, id interface{}) {
+	resBytes, err := Req(url, proxy, "file")
 	if err != nil {
 		msg := fmt.Sprintf("文件请求失败fileUrl:%s,err:%s,新闻id或者uuid:%d", url, err, id)
 		zap.L().Error(msg)
@@ -54,6 +54,6 @@ func fileDownload(filePath, fileName string, url, header, proxy string, id inter
 	defer file.Close()
 
 	writer := bufio.NewWriter(file)
-	_, _ = writer.Write(resBytes)
+	_, _ = writer.Write(resBytes.([]byte))
 	_ = writer.Flush()
 }
