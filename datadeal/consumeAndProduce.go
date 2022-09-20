@@ -4,6 +4,7 @@ import (
 	"deal_data/global"
 	"deal_data/mysqlservice"
 	"fmt"
+	"go.uber.org/zap"
 	"sync"
 	"time"
 )
@@ -45,7 +46,23 @@ func Consume(in <-chan mysqlservice.News) {
 			fmt.Println(err)
 		}
 		// 处理数据
-		fmt.Println(data)
+		go func(news mysqlservice.News) {
+			defer func() {
+				if err := recover(); err != nil {
+					zap.L().Error(fmt.Sprintf("数据处理异常:%s,新闻id:%d", err, news.Id))
+					return
+				} else {
+					err = global.Db.UpdateNew(news.Id, 2)
+					if err != nil {
+						zap.L().Error(fmt.Sprintf("新闻处理状态更新2失败,err:%s,新闻id:%d", err, news.Id))
+						return
+					}
+				}
+			}()
+			deal := NewDataDeal("", news.Direction)
+			deal.download(news.Content, news.Id)
+			deal.TransNewsToJson(news)
+		}(data)
 
 		Cond.L.Unlock()
 		Cond.Signal()

@@ -1,35 +1,42 @@
 package util
 
 import (
+	"bufio"
 	"deal_data/global"
+	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 )
 
 type Tool struct {
-	header      string
-	dateTimeStr string
-	time        string
-	filePath    string
-	imgPath     string
-	jsonFile    string
-	proxy       string
+	header       string
+	dateTimeStr  string
+	time         string
+	filePath     string
+	imgPath      string
+	jsonPathName string
+	proxy        string
 }
 
-func NewTool(proxy string) *Tool {
+func NewTool(proxy string, filePath string) *Tool {
 	currTime := time.Now()
-	return &Tool{
+	tool := &Tool{
 		header:      global.Header,
 		dateTimeStr: currTime.Format("20060102150405"),
 		time:        currTime.Format("2006-01-02"),
 		proxy:       proxy,
 	}
+	jsonName := fmt.Sprintf("%s_newsty.json", tool.dateTimeStr)
+	tool.jsonPathName = filepath.Join(filePath, jsonName)
+	MkFile(tool.jsonPathName)
+	return tool
 }
 
-func (tool *Tool) ProfileImgDownload(imgBasePath, fileName, url string) {
+func (tool *Tool) ProfileImgDownload(imgBasePath, fileName, url string, uuid string) {
 	if !strings.HasPrefix(url, "http") {
 		msg := fmt.Sprintf("%s:no schema", url)
 		zap.L().Error(msg)
@@ -40,13 +47,7 @@ func (tool *Tool) ProfileImgDownload(imgBasePath, fileName, url string) {
 
 	Mkdir(completeProfilePath)
 
-	resBytes, err := Req(url, tool.header, tool.proxy)
-	if err != nil {
-		msg := fmt.Sprintf("头像图片请求失败:%s", url)
-		zap.L().Error(msg)
-		return
-	}
-	fileDownload(completeProfilePath, fileName, resBytes)
+	fileDownload(completeProfilePath, fileName, url, tool.header, tool.proxy, uuid)
 }
 
 func (tool *Tool) ImgOrFileDownload(filePath, fileName, url, fileType string, newsId int) {
@@ -55,11 +56,23 @@ func (tool *Tool) ImgOrFileDownload(filePath, fileName, url, fileType string, ne
 
 	Mkdir(completeFilePath)
 
-	resBytes, err := Req(url, tool.header, tool.proxy)
+	fileDownload(completeFilePath, fileName, url, tool.header, tool.proxy, newsId)
+}
+
+func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
+
+	file, err := os.OpenFile(tool.jsonPathName, os.O_APPEND|os.O_CREATE, 7777)
 	if err != nil {
-		msg := fmt.Sprintf("文件请求失败fileUrl:%s,err:%s,新闻id:%d", url, err, newsId)
-		zap.L().Error(msg)
+		zap.L().Error(fmt.Sprintf("新闻写入json文件失败,err:%s,新闻id：%d", err, newsId))
 		return
 	}
-	fileDownload(completeFilePath, fileName, resBytes)
+	strNews, err := json.Marshal(news)
+	if err != nil {
+		zap.L().Error(fmt.Sprintf("新闻序列化失败,err:%s,新闻id：%d", err, newsId))
+		return
+	}
+	writer := bufio.NewWriter(file)
+	_, _ = writer.Write(strNews)
+	_ = writer.Flush()
+
 }

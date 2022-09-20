@@ -37,7 +37,14 @@ func MkFile(filePath string) {
 	}
 }
 
-func fileDownload(filePath, fileName string, fileBytes []byte) {
+func fileDownload(filePath, fileName string, url, header, proxy string, id interface{}) {
+	resBytes, err := Req(url, header, proxy)
+	if err != nil {
+		msg := fmt.Sprintf("文件请求失败fileUrl:%s,err:%s,新闻id或者uuid:%d", url, err, id)
+		zap.L().Error(msg)
+		return
+	}
+
 	imgFilePath := filepath.Join(filePath, fileName)
 	file, err := os.OpenFile(imgFilePath, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
@@ -47,6 +54,6 @@ func fileDownload(filePath, fileName string, fileBytes []byte) {
 	defer file.Close()
 
 	writer := bufio.NewWriter(file)
-	writer.Write(fileBytes)
-	writer.Flush()
+	_, _ = writer.Write(resBytes)
+	_ = writer.Flush()
 }

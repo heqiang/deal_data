@@ -19,22 +19,15 @@ type DataDeal struct {
 	filePath string
 }
 
-type contentsStruct struct {
-	Type        string      `json:"type"`
-	Name        interface{} `json:"name,omitempty"`
-	Md5Src      string      `json:"md5src,omitempty"`
-	Description string      `json:"description,omitempty"`
-	Src         string      `json:"src,omitempty"`
-	Data        string      `json:"data,omitempty"`
-}
-
 func NewDataDeal(proxy, country string) *DataDeal {
 	dataDeal := &DataDeal{
-		tool:     util.NewTool(proxy),
 		currTime: time.Now().Format("2006-01-02"),
 	}
 	dataDeal.country = getDirection(country)
 	dataDeal.filePath = filepath.Join(global.AbsDataPath, dataDeal.country, dataDeal.currTime)
+	dataDeal.tool = util.NewTool(proxy, dataDeal.filePath)
+
+	util.Mkdir(dataDeal.filePath)
 	return dataDeal
 }
 
@@ -49,9 +42,14 @@ func getDirection(country string) (newCountry string) {
 	return
 }
 
-func (d *DataDeal) fileDownload(content string, newsId int) {
+func (d *DataDeal) download(content string, newsId int) {
+	err := global.Db.UpdateNew(newsId, 1)
+	if err != nil {
+		zap.L().Error(fmt.Sprintf("新闻处理状态更新1失败,err:%s,新闻id:%d", err, newsId))
+		return
+	}
 	if content != "" {
-		var cons []contentsStruct
+		var cons []oldConStruct
 		err := json.Unmarshal([]byte(content), &cons)
 		if err != nil {
 			zap.L().Error(fmt.Sprintf("content 反序列化失败,err:%s,新闻id:%d", err, newsId))
@@ -59,20 +57,16 @@ func (d *DataDeal) fileDownload(content string, newsId int) {
 		}
 
 		for _, con := range cons {
-			if con.Type == "image" {
-				d.tool.ImgOrFileDownload(d.filePath, con.Md5Src, con.Src, "image", newsId)
-			} else if con.Type == "file" {
-				d.tool.ImgOrFileDownload(d.filePath, con.Md5Src, con.Src, "file", newsId)
-
+			if con.Type == "image" || con.Type == "file" {
+				d.tool.ImgOrFileDownload(d.filePath, con.Md5Src, con.Src, con.Type, newsId)
 			}
-
 		}
 	}
 }
 
-func (d *DataDeal) TransNewsToJson(news mysqlservice.News) map[string]interface{} {
+func (d *DataDeal) TransNewsToJson(news mysqlservice.News) {
 	newsMap := map[string]interface{}{
-		"news_id":           news.Id,
+		"news_id":           news.Uuid,
 		"source_name":       news.SourceName,
 		"site_domain":       news.SiteDomain,
 		"author":            d.transStrToList(news.Author),
@@ -96,7 +90,7 @@ func (d *DataDeal) TransNewsToJson(news mysqlservice.News) map[string]interface{
 		"title":             news.Title,
 		"content":           d.transContent(news.Content),
 	}
-	return newsMap
+	d.tool.WriteNewsToJson(newsMap, news.Id)
 
 }
 
@@ -111,28 +105,32 @@ func (d *DataDeal) transStrToList(newsItem string) []interface{} {
 	return resList
 }
 
-func (d *DataDeal) transContent(contents string) []contentsStruct {
-	//var newContent []contentsStruct
+func (d *DataDeal) transContent(contents string) []interface{} {
+	var newContent []interface{}
 	contentsList := d.transStrToList(contents)
-	if len(contentsList) != 1 {
+	if len(contentsList) >= 1 {
 		for _, con := range contentsList {
-			conStruct := con.(contentsStruct)
-			if conStruct.Type == "image" {
-				continue
+			conStruct := con.(map[string]interface{})
+			if conStruct["type"] == "image" || conStruct["type"] == "file" {
+				newCon := d.transImageOrFileCon(conStruct, conStruct["type"].(string))
+				newContent = append(newContent, newCon)
 			}
-
+			if conStruct["type"] == "text" {
+				newContent = append(newContent, conStruct)
+			}
 		}
 	}
-
-	return []contentsStruct{}
-}
-func (d *DataDeal) transImageOrFileCon(con contentsStruct, fileType string) map[string]interface{} {
-	newCon := make(map[string]interface{})
-	newCon["type"] = fileType
-	newCon["data"] = con
-	return newCon
+	return newContent
 }
 
-func (d *DataDeal) transImageOrFileDict() {
-
+func (d *DataDeal) transImageOrFileCon(con map[string]interface{}, fileType string) (newCons map[string]interface{}) {
+	newCons = make(map[string]interface{})
+	newCons["type"] = fileType
+	newCons["data"] = map[string]interface{}{
+		"description": con["description"],
+		"md5src":      con["md5src"],
+		"src":         con["src"],
+		"name":        con["name"],
+	}
+	return
 }
