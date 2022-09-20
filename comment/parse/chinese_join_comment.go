@@ -7,6 +7,7 @@ import (
 	"github.com/lestrrat-go/libxml2/xpath"
 	"go.uber.org/zap"
 	"path/filepath"
+	"strconv"
 )
 
 type ChineseJoinComment struct {
@@ -48,9 +49,21 @@ func (comment *ChineseJoinComment) Run() {
 			var comments commentStruct
 			comments.commentId = util.GenUuid()
 			comments.newsId = comment.articleUrl
-			comments.createTime = ""
-			comments.content = xpath.String(node.Find(`//section[@class="comments-content"]//text()`))
+			comments.createTime = comment.getText(node, `//div[@class="comments-user"]/small/text()`)
+			comments.content = comment.getText(node, `//section[@class="comments-content"]//text()`)
+			likeCount, err := strconv.Atoi(comment.getText(node, `//button[@id="vote-up"]/span/text()`))
+			if err != nil {
+				zap.L().Warn(fmt.Sprintf("%s获取like_count 失败,err:%s", comment.articleUrl, err))
+				return
+			}
+			comments.likeCount = likeCount
+			comments.replayCount = 0
+			comments.isHost = false
 
 		}
 	}
+}
+
+func (comment *ChineseJoinComment) getText(node types.Node, rule string) string {
+	return xpath.String(node.Find(rule))
 }
