@@ -7,7 +7,6 @@ import (
 )
 
 func InitConfig(env string) {
-
 	configFilePrefix := "config"
 	configFileName := fmt.Sprintf("%s_pro.yaml", configFilePrefix)
 	if env == "dev" {

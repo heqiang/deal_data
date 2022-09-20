@@ -2,6 +2,8 @@ package datadeal
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -20,4 +22,11 @@ func TestNewDataDeal(t *testing.T) {
 	d := NewDataDeal("", "cn")
 	newContent := d.transContent(testContents)
 	fmt.Println(newContent)
+}
+
+func TestFileNmae(t *testing.T) {
+	filePath := `E:\\goproject\\deal_data\\data\\2022-09-20\\20220920202202_newsty.json`
+	res2 := strings.Split(filePath, string(filepath.Separator))
+	filep := strings.Join(res2[0:len(res2)-1], string(filepath.Separator))
+	println(filep)
 }

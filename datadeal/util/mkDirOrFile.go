@@ -6,6 +6,7 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func Mkdir(dirPath string) {
@@ -23,12 +24,18 @@ func Mkdir(dirPath string) {
 }
 
 func MkFile(filePath string) {
+	//确保文件目录存在
+	fileDirList := strings.Split(filePath, string(filepath.Separator))
+	fileDir := strings.Join(fileDirList[0:len(fileDirList)-1], string(filepath.Separator))
+	Mkdir(fileDir)
+
 	_, err := os.Stat(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			fp, err := os.Create(filePath)
 			if err != nil {
-				msg := fmt.Sprintf("%s 文件创建失败,err:%s", filePath, err)
+				fileSuffix := strings.Split(filePath, ".")[1]
+				msg := fmt.Sprintf("%s 文件创建失败,err:%s", fileSuffix, err)
 				zap.L().Warn(msg)
 				return
 			}

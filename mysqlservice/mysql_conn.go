@@ -16,7 +16,7 @@ func NewMysqlConn(config *config.MysqlConfig) *MysqlConn {
 	dsn := "%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local"
 	dsn = fmt.Sprintf(dsn, config.User, config.Password, config.Host, config.Port, config.Db)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger: logger.Default.LogMode(logger.Warn),
 	})
 	if err != nil {
 		panic("mysql Conn failed")
