@@ -65,6 +65,7 @@ func (d *DataDeal) download(content string, newsId int) {
 }
 
 func (d *DataDeal) TransNewsToJson(news mysqlservice.News) {
+	fmt.Println("正在处理json转换")
 	newsMap := map[string]interface{}{
 		"news_id":           news.Uuid,
 		"source_name":       news.SourceName,

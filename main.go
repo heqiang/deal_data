@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"deal_data/datadeal"
 	"deal_data/global"
 	"deal_data/log"
@@ -10,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 func main() {
@@ -30,10 +32,11 @@ func main() {
 	quit := make(chan bool)
 	newsChan := make(chan mysqlservice.News, 15)
 	datadeal.Cond.L = new(sync.Mutex)
-
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
 	go datadeal.Produce(newsChan)
-	for i := 0; i < 10; i++ {
-		go datadeal.Consume(newsChan)
+	for i := 0; i < 2; i++ {
+		go datadeal.Consume(newsChan, ctx)
 	}
 
 	<-quit

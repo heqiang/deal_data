@@ -77,7 +77,7 @@ func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
 	writer := bufio.NewWriter(file)
 	_, _ = writer.Write(strNews)
 	_ = writer.Flush()
-
+	fmt.Println("新闻写入json完毕")
 }
 
 func Parse(articleUrl string) string {
