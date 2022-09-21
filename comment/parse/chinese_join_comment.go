@@ -1,6 +1,7 @@
 package parse
 
 import (
+	"deal_data/comment/parse/comm_struct"
 	"deal_data/datadeal/util"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
@@ -20,25 +21,6 @@ type ChineseJoinComment struct {
 	tool            *util.Tool
 	commentJsonPath string
 	lang            string
-}
-
-type Comment struct {
-	CommentId       string `json:"comment_id"`
-	NewsId          string `json:"news_id"`
-	SourceUrl       string `json:"source_url"`
-	CreateTime      string `json:"create_time,omitempty"`
-	Content         string `json:"content,omitempty"`
-	LikeCount       int    `json:"like_count,omitempty"`
-	ReplayCount     int    `json:"replay_count,omitempty"`
-	IsHost          bool   `json:"is_host,omitempty"`
-	ReplayCommentId string `json:"replay_comment_id,omitempty"`
-	WhichPlatform   string `json:"which_platform,omitempty"`
-	UserId          string `json:"user_id,omitempty"`
-	UserName        string `json:"user_name,omitempty"`
-	CrawlTime       string `json:"crawl_time,omitempty"`
-	InsertTime      string `json:"insert_time,omitempty"`
-	Lang            string `json:"lang_recg,omitempty"`
-	UserPicLink     string `json:"user_pic_link,omitempty"`
 }
 
 func NewChineseJoinComment(articleUrl, newsUuid, commentPath, proxy, lang, dataTimeStr string) *ChineseJoinComment {
@@ -67,7 +49,7 @@ func (comm *ChineseJoinComment) Run() {
 	selection := dom.Find(".reply-list section article")
 	if len(selection.Nodes) > 0 {
 		selection.Each(func(i int, selection *goquery.Selection) {
-			var comments Comment
+			var comments comm_struct.Comment
 			comments.CommentId = util.GenUuid()
 			comments.NewsId = comm.newsUuid
 			comments.CreateTime = selection.Find(".list-comments .comments-user small").First().Text()

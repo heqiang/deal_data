@@ -2,7 +2,7 @@ package util
 
 import (
 	"bufio"
-	"deal_data/comment/parse"
+	"deal_data/comment/parse/comm_struct"
 	"deal_data/global"
 	"encoding/json"
 	"fmt"
@@ -69,7 +69,7 @@ func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
 		zap.L().Error(fmt.Sprintf("新闻写入json文件失败,err:%s,新闻id：%d", err, newsId))
 		return
 	}
-
+	defer file.Close()
 	byteNews, err := json.Marshal(news)
 	if err != nil {
 		zap.L().Error(fmt.Sprintf("新闻序列化失败,err:%s,新闻id：%d", err, newsId))
@@ -82,20 +82,22 @@ func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
 	fmt.Println("新闻写入json完毕")
 }
 
-func (tool *Tool) WriteToJson(comment parse.Comment, jsonPath, url string) {
+func (tool *Tool) WriteToJson(comment comm_struct.Comment, jsonPath, url string) {
+	defer global.Mutex.Unlock()
 	file, err := os.OpenFile(jsonPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 	if err != nil {
 		fmt.Println(err)
 		zap.L().Error(fmt.Sprintf("json文件打开失败,err:%s,新闻url：%s", err, url))
 		return
 	}
+	defer file.Close()
 
 	byteNews, err := json.Marshal(comment)
 	if err != nil {
 		zap.L().Error(fmt.Sprintf("评论序列化失败,err:%s,新闻url：%s", err, url))
 		return
 	}
-
+	global.Mutex.Lock()
 	writer := bufio.NewWriter(file)
 	_, _ = writer.WriteString(string(byteNews) + "\n")
 	_ = writer.Flush()

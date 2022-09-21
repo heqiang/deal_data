@@ -43,7 +43,7 @@ func (p *Pipeline) Consume(in <-chan mysqlservice.News, ctx context.Context) {
 		p.w.Run(func() {
 			defer func() {
 				if err := recover(); err != nil {
-					zap.L().Error(fmt.Sprintf("数据处理异常:%s,err:%d,新闻id:%d,", err, debug.Stack(), news.Id))
+					zap.L().Error(fmt.Sprintf("数据处理异常:%s,err:%s,新闻id:%d,", err, debug.Stack(), news.Id))
 					return
 				} else {
 					err = global.Db.UpdateNew(news.Id, 2)
