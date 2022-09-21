@@ -21,6 +21,7 @@ func main() {
 		zap.L().Error(msg)
 		return
 	}
+	// 初始化评论映射
 	global.AbsDataPath = filepath.Join(rootPath, "data")
 	global.InitConfig("dev")
 	err = log.InitLogger(global.ServerConfig.LogConfig, "dev")

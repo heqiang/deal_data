@@ -13,12 +13,13 @@ func Mkdir(dirPath string) {
 	_, err := os.Stat(dirPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			err := os.MkdirAll(dirPath, 7777)
+			err := os.MkdirAll(dirPath, 0777)
 			if err != nil {
 				msg := fmt.Sprintf("%s 目录创建失败,err:%s", dirPath, err)
 				zap.L().Warn(msg)
 				return
 			}
+			os.Chmod(dirPath, 0777)
 		}
 	}
 }
@@ -40,12 +41,13 @@ func MkFile(filePath string) {
 				return
 			}
 			defer fp.Close()
+
 		}
 	}
 }
 
 func fileDownload(filePath, fileName string, url, proxy string, id interface{}) {
-	resBytes, err := Req(url, proxy, "file")
+	resBytes, err := Req(url, proxy)
 	if err != nil {
 		msg := fmt.Sprintf("文件请求失败fileUrl:%s,err:%s,新闻id或者uuid:%d", url, err, id)
 		zap.L().Error(msg)
@@ -61,6 +63,6 @@ func fileDownload(filePath, fileName string, url, proxy string, id interface{}) 
 	defer file.Close()
 
 	writer := bufio.NewWriter(file)
-	_, _ = writer.Write(resBytes.([]byte))
+	_, _ = writer.Write(resBytes)
 	_ = writer.Flush()
 }

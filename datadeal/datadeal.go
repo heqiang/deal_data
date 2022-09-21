@@ -1,6 +1,7 @@
 package datadeal
 
 import (
+	"deal_data/comment"
 	"deal_data/datadeal/util"
 	"deal_data/global"
 	"deal_data/mysqlservice"
@@ -8,38 +9,34 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
 type DataDeal struct {
-	tool     *util.Tool
-	country  string
-	currTime string
-	filePath string
+	tool        *util.Tool
+	country     string
+	currTime    string
+	filePath    string
+	DateTimeStr string
 }
 
 func NewDataDeal(proxy, country string) *DataDeal {
 	dataDeal := &DataDeal{
-		currTime: time.Now().Format("2006-01-02"),
+		currTime:    time.Now().Format("2006-01-02"),
+		DateTimeStr: time.Now().Format("20060102150405"),
 	}
-	dataDeal.country = getDirection(country)
+	dataDeal.country = util.GetDirection(country)
 	dataDeal.filePath = filepath.Join(global.AbsDataPath, dataDeal.country, dataDeal.currTime)
-	dataDeal.tool = util.NewTool(proxy, dataDeal.filePath)
+	dataDeal.tool = util.NewTool(proxy, dataDeal.filePath, dataDeal.DateTimeStr)
 
 	util.Mkdir(dataDeal.filePath)
 	return dataDeal
 }
 
-func getDirection(country string) (newCountry string) {
-	countryList := []string{"china_hk", "china_tw", "china_macao", "china_xz"}
-	for _, cou := range countryList {
-		if strings.Contains(country, cou) {
-			newCountry = strings.Replace(country, "china_hk", "hk", -1)
-			return strings.ToUpper(newCountry)
-		}
-	}
-	return
+func (d *DataDeal) parseComment(articleUrl, newsUuid, commentPath, proxy, lang, dataTimeStr string) {
+	siteDomain := util.ParseHost(articleUrl)
+	comment.InitMap(articleUrl, newsUuid, commentPath, proxy, lang, dataTimeStr)
+	fmt.Println(siteDomain)
 }
 
 func (d *DataDeal) download(content string, newsId int) {
