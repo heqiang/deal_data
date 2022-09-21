@@ -27,7 +27,12 @@ func (p *Pipeline) Produce(out chan<- mysqlservice.News) {
 			time.Sleep(time.Second)
 			continue
 		}
+		if len(news) > 0 {
+			mysqlservice.MaxId = news[len(news)-1].Id
+		}
+
 		for _, data := range news {
+			//fmt.Println(data.Id)
 			out <- data
 		}
 	}
