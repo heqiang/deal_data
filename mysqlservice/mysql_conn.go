@@ -25,6 +25,7 @@ func NewMysqlConn(config *config.MysqlConfig) *MysqlConn {
 	return &MysqlConn{Db: db}
 }
 
+// Select TODO 记录最大值实现每次查询不会查询到重复数据
 func (conn *MysqlConn) Select() (newsList []News, err error) {
 	selectResult := conn.Db.Limit(10).Where("deal_code =?", 0).Find(&newsList)
 	if selectResult.Error != nil {

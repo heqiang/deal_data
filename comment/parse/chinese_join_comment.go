@@ -1,7 +1,7 @@
 package parse
 
 import (
-	"deal_data/comment/parse/commentstruct"
+	"deal_data/comment"
 	"deal_data/datadeal/util"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
@@ -14,7 +14,6 @@ import (
 var ChineseComment *ChineseJoinComment
 
 type ChineseJoinComment struct {
-	commentstruct.BaseParseStruct
 	articleUrl      string
 	newsUuid        string
 	commentPath     string
@@ -25,7 +24,7 @@ type ChineseJoinComment struct {
 }
 
 func NewChineseJoinComment(articleUrl, newsUuid, commentPath, proxy, lang, dataTimeStr string) *ChineseJoinComment {
-	comment := &ChineseJoinComment{
+	chineseComment := &ChineseJoinComment{
 		articleUrl:  articleUrl,
 		newsUuid:    newsUuid,
 		commentPath: commentPath,
@@ -33,26 +32,26 @@ func NewChineseJoinComment(articleUrl, newsUuid, commentPath, proxy, lang, dataT
 		tool:        util.NewTool(proxy, commentPath, dataTimeStr),
 		lang:        lang,
 	}
-	util.Mkdir(comment.commentPath)
-	comment.commentJsonPath = filepath.Join(commentPath, fmt.Sprintf("%s_comments.json", comment.tool.DateTimeStr))
+	util.Mkdir(chineseComment.commentPath)
+	chineseComment.commentJsonPath = filepath.Join(commentPath, fmt.Sprintf("%s_comments.json", chineseComment.tool.DateTimeStr))
 
-	return comment
+	return chineseComment
 }
 
-func (comment *ChineseJoinComment) Run() {
-	fmt.Println(fmt.Sprintf("正在抓取:%s的评论", comment.articleUrl))
-	dom, err := util.GetDocument(comment.articleUrl, comment.proxy)
+func (comm *ChineseJoinComment) Run() {
+	fmt.Println(fmt.Sprintf("正在抓取:%s的评论", comm.articleUrl))
+	dom, err := util.GetDocument(comm.articleUrl, comm.proxy)
 	if err != nil {
-		zap.L().Error(fmt.Sprintf("文章:%s\n评论请求失败,err:%s", comment.articleUrl, err))
+		zap.L().Error(fmt.Sprintf("文章:%s\n评论请求失败,err:%s", comm.articleUrl, err))
 		return
 	}
 
 	selection := dom.Find(".reply-list section article")
 	if len(selection.Nodes) > 0 {
 		selection.Each(func(i int, selection *goquery.Selection) {
-			var comments commentstruct.CommentStruct
+			var comments comment.Comment
 			comments.CommentId = util.GenUuid()
-			comments.NewsId = comment.newsUuid
+			comments.NewsId = comm.newsUuid
 			comments.CreateTime = selection.Find(".list-comments .comments-user small").First().Text()
 			comments.Content = selection.Find(".list-comments .comments-content").Text()
 			comments.LikeCount, _ = strconv.Atoi(selection.Find(".list-comments .text-danger").Text())
@@ -64,10 +63,10 @@ func (comment *ChineseJoinComment) Run() {
 			comments.UserName = selection.Find(".list-comments .comments-user strong").Text()
 			comments.CrawlTime = time.Now().Format("2006-01-02 15:04:05")
 			comments.InsertTime = ""
-			comments.Lang = comment.lang
+			comments.Lang = comm.lang
 			comments.UserPicLink = ""
 			fmt.Println(comments.UserName)
-			comment.tool.WriteToJson(comments, comment.commentJsonPath, comment.articleUrl)
+			comm.tool.WriteToJson(comments, comm.commentJsonPath, comm.articleUrl)
 		})
 	}
 
