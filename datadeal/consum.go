@@ -31,21 +31,16 @@ type DataDeal struct {
 	DateTimeStr string
 }
 
-func Consume(in <-chan mysqlservice.News, ctx context.Context) {
-	for {
-		Cond.L.Lock()
-		for len(in) == 0 {
-			Cond.Wait()
-		}
-		data := <-in
-
+func (p *Pipeline) Consume(in <-chan mysqlservice.News, ctx context.Context) {
+	for data := range in {
 		err := global.Db.UpdateNew(data.Id, 1)
 		fmt.Println(fmt.Sprintf("正在处理数据:%d", data.Id))
 		if err != nil {
 			fmt.Println(err)
 		}
 		//TODO 协程超时退出,数量控制
-		go func(news mysqlservice.News) {
+		news := data
+		p.w.Run(func() {
 			defer func() {
 				if err := recover(); err != nil {
 					zap.L().Error(fmt.Sprintf("数据处理异常:%s,err:%d,新闻id:%d,", err, debug.Stack(), news.Id))
@@ -63,12 +58,7 @@ func Consume(in <-chan mysqlservice.News, ctx context.Context) {
 			deal := NewDataDeal(global.Proxy, news.Direction)
 			deal.TransNewsToJson(news)
 			deal.download(news.Content, news.Id)
-
-		}(data)
-
-		Cond.L.Unlock()
-		Cond.Signal()
-		time.Sleep(time.Millisecond * 500)
+		})
 	}
 }
 

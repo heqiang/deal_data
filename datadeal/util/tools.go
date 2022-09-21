@@ -2,7 +2,7 @@ package util
 
 import (
 	"bufio"
-	"deal_data/comment/parse/commentstruct"
+	"deal_data/comment/parse"
 	"deal_data/global"
 	"encoding/json"
 	"fmt"
@@ -82,7 +82,7 @@ func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
 	fmt.Println("新闻写入json完毕")
 }
 
-func (tool *Tool) WriteToJson(comment commentstruct.CommentStruct, jsonPath, url string) {
+func (tool *Tool) WriteToJson(comment parse.Comment, jsonPath, url string) {
 	file, err := os.OpenFile(jsonPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 	if err != nil {
 		fmt.Println(err)

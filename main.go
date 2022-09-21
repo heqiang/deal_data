@@ -38,10 +38,9 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 	//生产者消费者模式去处理数据
-	go datadeal.Produce(newsChan)
-	for i := 0; i < 2; i++ {
-		go datadeal.Consume(newsChan, ctx)
-	}
+	pipeline := datadeal.NewPipeline()
+	go pipeline.Produce(newsChan)
+	pipeline.Consume(newsChan, ctx)
 
 	<-quit
 
