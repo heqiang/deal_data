@@ -21,8 +21,8 @@ func main() {
 		zap.L().Error(msg)
 		return
 	}
-	// 初始化评论映射
 	global.AbsDataPath = filepath.Join(rootPath, "data")
+	// 初始化配置
 	global.InitConfig("dev")
 	err = log.InitLogger(global.ServerConfig.LogConfig, "dev")
 	if err != nil {
@@ -32,9 +32,12 @@ func main() {
 
 	quit := make(chan bool)
 	newsChan := make(chan mysqlservice.News, 15)
+
 	datadeal.Cond.L = new(sync.Mutex)
+	// 目前context还未使用
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
+	//生产者消费者模式去处理数据
 	go datadeal.Produce(newsChan)
 	for i := 0; i < 2; i++ {
 		go datadeal.Consume(newsChan, ctx)

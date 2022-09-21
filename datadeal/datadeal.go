@@ -61,6 +61,7 @@ func (d *DataDeal) download(content string, newsId int) {
 	}
 }
 
+// TransNewsToJson 新闻数据写入json
 func (d *DataDeal) TransNewsToJson(news mysqlservice.News) {
 	fmt.Println("正在处理json转换")
 	newsMap := map[string]interface{}{
@@ -109,6 +110,7 @@ func (d *DataDeal) transContent(contents string) []interface{} {
 	if len(contentsList) >= 1 {
 		for _, con := range contentsList {
 			conStruct := con.(map[string]interface{})
+			// content中的结构转换
 			if conStruct["type"] == "image" || conStruct["type"] == "file" {
 				newCon := d.transImageOrFileCon(conStruct, conStruct["type"].(string))
 				newContent = append(newContent, newCon)

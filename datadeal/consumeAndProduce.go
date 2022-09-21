@@ -64,6 +64,7 @@ func Consume(in <-chan mysqlservice.News, ctx context.Context) {
 					fmt.Println(fmt.Sprintf("%d,数据处理结束", data.Id))
 				}
 			}()
+			//数据处理的主要逻辑
 			deal := NewDataDeal(global.Proxy, news.Direction)
 			deal.TransNewsToJson(news)
 			deal.download(news.Content, news.Id)
