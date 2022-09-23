@@ -34,13 +34,13 @@ type DataDeal struct {
 func (p *Pipeline) Consume(in <-chan mysqlservice.News, ctx context.Context) {
 	for data := range in {
 		err := global.Db.UpdateNew(data.Id, 1)
-		fmt.Println(fmt.Sprintf("正在处理数据:%d", data.Id))
+		fmt.Println(fmt.Sprintf("%s:正在处理数据:%d", time.Now().Format("2006-01-02 15:04:05"), data.Id))
 		if err != nil {
 			fmt.Println(err)
 		}
 		//TODO 协程超时退出,数量控制
-		news := data
 		p.w.Run(func() {
+			news := data
 			defer func() {
 				if err := recover(); err != nil {
 					zap.L().Error(fmt.Sprintf("数据处理异常:%s,err:%s,新闻id:%d,", err, debug.Stack(), news.Id))
@@ -51,7 +51,7 @@ func (p *Pipeline) Consume(in <-chan mysqlservice.News, ctx context.Context) {
 						zap.L().Error(fmt.Sprintf("新闻处理状态更新2失败,err:%s,debugStack:%s,新闻id:%d", err, debug.Stack(), news.Id))
 						return
 					}
-					fmt.Println(fmt.Sprintf("%d,数据处理结束", data.Id))
+					fmt.Println(fmt.Sprintf("%s:%d数据处理结束", time.Now().Format("2006-01-02 15:04:05"), data.Id))
 				}
 			}()
 			//数据处理的主要逻辑
@@ -105,7 +105,6 @@ func (d *DataDeal) download(content string, newsId int) {
 
 // TransNewsToJson 新闻数据写入json
 func (d *DataDeal) TransNewsToJson(news mysqlservice.News) {
-	fmt.Println("正在处理json转换")
 	newsMap := map[string]interface{}{
 		"news_id":           news.Uuid,
 		"source_name":       news.SourceName,

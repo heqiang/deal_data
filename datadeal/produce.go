@@ -5,11 +5,8 @@ import (
 	"deal_data/global"
 	"deal_data/mysqlservice"
 	"fmt"
-	"sync"
 	"time"
 )
-
-var Cond sync.Cond
 
 type Pipeline struct {
 	w *worker.Worker
@@ -21,6 +18,7 @@ func NewPipeline() *Pipeline {
 
 func (p *Pipeline) Produce(out chan<- mysqlservice.News) {
 	for {
+		global.Cond.L.Lock()
 		news, err := global.Db.Select()
 		if err != nil {
 			fmt.Println(err)
@@ -32,8 +30,8 @@ func (p *Pipeline) Produce(out chan<- mysqlservice.News) {
 		}
 
 		for _, data := range news {
-			//fmt.Println(data.Id)
 			out <- data
 		}
+		global.Cond.L.Unlock()
 	}
 }

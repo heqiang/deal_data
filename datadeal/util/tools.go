@@ -60,6 +60,8 @@ func (tool *Tool) ImgOrFileDownload(filePath, fileName, url, fileType string, ne
 }
 
 func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
+	global.Cond.L.Lock()
+	defer global.Cond.L.Unlock()
 	jsonName := fmt.Sprintf("%s_newsty.json", tool.DateTimeStr)
 	tool.jsonPathName = filepath.Join(tool.fileDir, jsonName)
 	MkFile(tool.jsonPathName)
@@ -79,10 +81,9 @@ func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
 	writer := bufio.NewWriter(file)
 	_, _ = writer.WriteString(string(byteNews) + "\n")
 	_ = writer.Flush()
-	fmt.Println("新闻写入json完毕")
 }
 
-func (tool *Tool) WriteToJson(comment comm_struct.Comment, jsonPath, url string) {
+func (tool *Tool) WriteCommentToJson(comment comm_struct.Comment, jsonPath, url string) {
 	defer global.Mutex.Unlock()
 	global.Mutex.Lock()
 	file, err := os.OpenFile(jsonPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
@@ -104,8 +105,8 @@ func (tool *Tool) WriteToJson(comment comm_struct.Comment, jsonPath, url string)
 		return
 	}
 	defer file.Close()
-	//writer := bufio.NewWriter(file)
-	//_, _ = writer.WriteString(string(byteNews) + "\n")
-	//_ = writer.Flush()
+	writer := bufio.NewWriter(file)
+	_, _ = writer.WriteString(string(byteNews) + "\n")
+	_ = writer.Flush()
 	fmt.Println("评论写入json完毕")
 }

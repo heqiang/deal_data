@@ -6,6 +6,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"time"
 )
 
 var MaxId int
@@ -23,7 +24,10 @@ func NewMysqlConn(config *config.MysqlConfig) *MysqlConn {
 	if err != nil {
 		panic("mysql Conn failed")
 	}
-
+	sqlDb, err := db.DB()
+	sqlDb.SetMaxIdleConns(10)  //空闲连接数
+	sqlDb.SetMaxOpenConns(200) //最大连接数
+	sqlDb.SetConnMaxLifetime(time.Minute)
 	return &MysqlConn{Db: db}
 }
 

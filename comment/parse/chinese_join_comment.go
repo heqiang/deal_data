@@ -66,7 +66,7 @@ func (comm *ChineseJoinComment) Run() {
 			comments.Lang = comm.lang
 			comments.UserPicLink = ""
 			fmt.Println(comments.UserName)
-			comm.tool.WriteToJson(comments, comm.commentJsonPath, comm.articleUrl)
+			comm.tool.WriteCommentToJson(comments, comm.commentJsonPath, comm.articleUrl)
 		})
 	}
 

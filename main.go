@@ -33,7 +33,7 @@ func main() {
 	quit := make(chan bool)
 	newsChan := make(chan mysqlservice.News, 15)
 
-	datadeal.Cond.L = new(sync.Mutex)
+	global.Cond.L = new(sync.Mutex)
 	// 目前context还未使用
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
