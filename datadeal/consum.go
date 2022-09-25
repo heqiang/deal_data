@@ -75,10 +75,22 @@ func NewDataDeal(proxy, country string) *DataDeal {
 	return dataDeal
 }
 
-func (d *DataDeal) parseComment(articleUrl, newsUuid, commentPath, proxy, lang, dataTimeStr string) {
+func (d *DataDeal) parseComment(articleUrl, uuid string) {
 	siteDomain := util.ParseHost(articleUrl)
-	comment.InitMap(articleUrl, newsUuid, commentPath, proxy, lang, dataTimeStr)
-	fmt.Println(siteDomain)
+	if _, ok := comment.CommentMap[siteDomain]; ok {
+		msgInfo := map[string]string{
+			"articleUrl":      articleUrl,
+			"commentPath":     d.filePath,
+			"commentJsonName": fmt.Sprintf("%s_newsty.json", d.DateTimeStr),
+			"newUUID":         uuid,
+		}
+		msgByte, err := json.Marshal(msgInfo)
+		if err != nil {
+			zap.L().Error(fmt.Sprintf("%s序列化错误,err:%s", articleUrl, err))
+			return
+		}
+		global.RabbitMq.SentMessage(string(msgByte))
+	}
 }
 
 func (d *DataDeal) download(content string, newsId int) {

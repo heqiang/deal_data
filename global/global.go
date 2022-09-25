@@ -3,6 +3,7 @@ package global
 import (
 	"deal_data/config"
 	"deal_data/mysqlservice"
+	"deal_data/rabbitmq"
 	"sync"
 )
 
@@ -14,4 +15,5 @@ var (
 	Proxy        = "http://127.0.0.1:9910"
 	Mutex        sync.Mutex
 	Cond         sync.Cond
+	RabbitMq     *rabbitmq.RabbitMQ
 )

@@ -11,3 +11,13 @@ log:
   max_size: 200
   max_age: 30
   max_backups: 7
+mq:
+  host: "localhost"
+  port: "5673"
+queue:
+  queueName: "news_comment1"
+  durable: True
+exchange:
+  exchangeName: "news_comment1"
+  kind: "fanout"
+  durable: True

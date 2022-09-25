@@ -2,7 +2,6 @@ package util
 
 import (
 	"bufio"
-	"deal_data/comment/parse/comm_struct"
 	"deal_data/global"
 	"encoding/json"
 	"fmt"
@@ -81,32 +80,4 @@ func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
 	writer := bufio.NewWriter(file)
 	_, _ = writer.WriteString(string(byteNews) + "\n")
 	_ = writer.Flush()
-}
-
-func (tool *Tool) WriteCommentToJson(comment comm_struct.Comment, jsonPath, url string) {
-	defer global.Mutex.Unlock()
-	global.Mutex.Lock()
-	file, err := os.OpenFile(jsonPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
-	if err != nil {
-		fmt.Println(err)
-		zap.L().Error(fmt.Sprintf("json文件打开失败,err:%s,新闻url：%s", err, url))
-		return
-	}
-	defer file.Close()
-
-	byteNews, err := json.Marshal(comment)
-	if err != nil {
-		zap.L().Error(fmt.Sprintf("评论序列化失败,err:%s,新闻url：%s", err, url))
-		return
-	}
-	_, err = file.Write(byteNews)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer file.Close()
-	writer := bufio.NewWriter(file)
-	_, _ = writer.WriteString(string(byteNews) + "\n")
-	_ = writer.Flush()
-	fmt.Println("评论写入json完毕")
 }

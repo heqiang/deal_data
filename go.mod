@@ -8,6 +8,7 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/spf13/viper v1.13.0
+	github.com/streadway/amqp v1.0.0
 	go.uber.org/zap v1.17.0
 	gorm.io/driver/mysql v1.3.6
 	gorm.io/gorm v1.23.8
