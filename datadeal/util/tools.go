@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"time"
 )
@@ -59,8 +60,6 @@ func (tool *Tool) ImgOrFileDownload(filePath, fileName, url, fileType string, ne
 }
 
 func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
-	global.Cond.L.Lock()
-	defer global.Cond.L.Unlock()
 	jsonName := fmt.Sprintf("%s_newsty.json", tool.DateTimeStr)
 	tool.jsonPathName = filepath.Join(tool.fileDir, jsonName)
 	MkFile(tool.jsonPathName)
@@ -80,4 +79,11 @@ func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
 	writer := bufio.NewWriter(file)
 	_, _ = writer.WriteString(string(byteNews) + "\n")
 	_ = writer.Flush()
+
+	err = global.Db.UpdateNew(newsId, 2)
+	if err != nil {
+		zap.L().Error(fmt.Sprintf("新闻处理状态更新2失败,err:%s,debugStack:%s,新闻id:%d", err, debug.Stack(), newsId))
+		return
+	}
+	fmt.Println(fmt.Sprintf("%s:%d数据文本处理结束,更新状态为2", time.Now().Format("2006-01-02 15:04:05"), newsId))
 }

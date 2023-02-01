@@ -2,6 +2,7 @@ package mysqlservice
 
 import (
 	"deal_data/config"
+	"deal_data/datadeal/util"
 	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -25,7 +26,7 @@ func NewMysqlConn(config *config.MysqlConfig) *MysqlConn {
 		panic("mysql Conn failed")
 	}
 	sqlDb, err := db.DB()
-	sqlDb.SetMaxIdleConns(10)  //空闲连接数
+	sqlDb.SetMaxIdleConns(100) //空闲连接数
 	sqlDb.SetMaxOpenConns(200) //最大连接数
 	sqlDb.SetConnMaxLifetime(time.Minute)
 	return &MysqlConn{Db: db}
@@ -45,7 +46,7 @@ func (conn *MysqlConn) Select() (newsList []News, err error) {
 // 1 处理中
 // 2 处理结束
 func (conn *MysqlConn) UpdateNew(id int, statusNum int) (err error) {
-	updateRes := conn.Db.Model(&News{}).Where("id = ?", id).Update("deal_code", statusNum)
+	updateRes := conn.Db.Model(&News{}).Where("id = ?", id).Update("deal_code", statusNum).Update("deal_time", util.GetNowTime())
 	if updateRes.Error != nil {
 		return updateRes.Error
 	}

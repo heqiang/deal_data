@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"path/filepath"
-	"runtime/debug"
 	"time"
 )
 
@@ -41,19 +40,6 @@ func (p *Pipeline) Consume(in <-chan mysqlservice.News, ctx context.Context) {
 		//TODO 协程超时退出,数量控制
 		p.w.Run(func() {
 			news := data
-			defer func() {
-				if err := recover(); err != nil {
-					zap.L().Error(fmt.Sprintf("数据处理异常:%s,err:%s,新闻id:%d,", err, debug.Stack(), news.Id))
-					return
-				} else {
-					err = global.Db.UpdateNew(news.Id, 2)
-					if err != nil {
-						zap.L().Error(fmt.Sprintf("新闻处理状态更新2失败,err:%s,debugStack:%s,新闻id:%d", err, debug.Stack(), news.Id))
-						return
-					}
-					fmt.Println(fmt.Sprintf("%s:%d数据处理结束", time.Now().Format("2006-01-02 15:04:05"), data.Id))
-				}
-			}()
 			//数据处理的主要逻辑
 			deal := NewDataDeal(global.Proxy, news.Direction)
 			deal.TransNewsToJson(news)
@@ -65,13 +51,14 @@ func (p *Pipeline) Consume(in <-chan mysqlservice.News, ctx context.Context) {
 func NewDataDeal(proxy, country string) *DataDeal {
 	dataDeal := &DataDeal{
 		currTime:    time.Now().Format("2006-01-02"),
-		DateTimeStr: time.Now().Format("20060102150405"),
+		DateTimeStr: time.Now().Format("2006010215"),
 	}
 	dataDeal.country = util.GetDirection(country)
 	dataDeal.filePath = filepath.Join(global.AbsDataPath, dataDeal.country, dataDeal.currTime)
 	dataDeal.tool = util.NewTool(proxy, dataDeal.filePath, dataDeal.DateTimeStr)
 
 	util.Mkdir(dataDeal.filePath)
+
 	return dataDeal
 }
 
@@ -94,11 +81,6 @@ func (d *DataDeal) parseComment(articleUrl, uuid string) {
 }
 
 func (d *DataDeal) download(content string, newsId int) {
-	err := global.Db.UpdateNew(newsId, 1)
-	if err != nil {
-		zap.L().Error(fmt.Sprintf("新闻处理状态更新1失败,err:%s,新闻id:%d", err, newsId))
-		return
-	}
 	if content != "" {
 		var cons []oldConStruct
 		err := json.Unmarshal([]byte(content), &cons)
