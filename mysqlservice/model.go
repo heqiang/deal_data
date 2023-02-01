@@ -1,5 +1,7 @@
 package mysqlservice
 
+import "time"
+
 type News struct {
 	Id              int    `orm:"id" json:"id"`
 	Uuid            string `orm:"uuid" json:"uuid"`
@@ -29,4 +31,8 @@ type News struct {
 
 func (*News) TableName() string {
 	return "news"
+}
+
+func GetNowTime() string {
+	return time.Now().Format("2006-01-02 15:04:05")
 }

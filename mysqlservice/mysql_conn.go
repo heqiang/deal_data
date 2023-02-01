@@ -2,7 +2,6 @@ package mysqlservice
 
 import (
 	"deal_data/config"
-	"deal_data/datadeal/util"
 	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -46,7 +45,7 @@ func (conn *MysqlConn) Select() (newsList []News, err error) {
 // 1 处理中
 // 2 处理结束
 func (conn *MysqlConn) UpdateNew(id int, statusNum int) (err error) {
-	updateRes := conn.Db.Model(&News{}).Where("id = ?", id).Update("deal_code", statusNum).Update("deal_time", util.GetNowTime())
+	updateRes := conn.Db.Model(&News{}).Where("id = ?", id).Update("deal_code", statusNum).Update("deal_time", GetNowTime())
 	if updateRes.Error != nil {
 		return updateRes.Error
 	}

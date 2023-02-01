@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/url"
 	"strings"
-	"time"
 )
 
 func ParseHost(articleUrl string) string {
@@ -33,8 +32,4 @@ func GetDirection(country string) (newCountry string) {
 		}
 	}
 	return
-}
-
-func GetNowTime() string {
-	return time.Now().Format("2006-01-02 15:04:05")
 }
