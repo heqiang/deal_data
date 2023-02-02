@@ -1,10 +1,10 @@
 name: data_deal_dev
 mysql:
-  host: 127.0.0.1
+  host: 43.153.74.252
   port: 3306
   user: "root"
-  password: "123456"
-  db: "news"
+  password: "gx_news_test@"
+  db: "news_test"
 log:
   level: "debug"
   filename: "deal_news.log"
@@ -26,6 +26,6 @@ exchange:
   durable: True
   autoDelete: False
   internal: False
-  noWait: Fals
+  noWait: False
 
 

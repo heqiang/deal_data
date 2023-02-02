@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"deal_data/datadeal"
 	"deal_data/global"
 	"deal_data/log"
@@ -11,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
 )
 
 func main() {
@@ -34,13 +32,12 @@ func main() {
 	newsChan := make(chan mysqlservice.News, 15)
 
 	global.Cond.L = new(sync.Mutex)
-	// 目前context还未使用
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
+
 	//生产者消费者模式去处理数据
 	pipeline := datadeal.NewPipeline()
 	go pipeline.Produce(newsChan)
-	pipeline.Consume(newsChan, ctx)
+
+	pipeline.Consume(newsChan)
 
 	<-quit
 

@@ -1,9 +1,9 @@
 package datadeal
 
 import (
-	"context"
 	"deal_data/comment"
 	"deal_data/datadeal/util"
+	"deal_data/datadeal/worker"
 	"deal_data/global"
 	"deal_data/mysqlservice"
 	"encoding/json"
@@ -30,14 +30,16 @@ type DataDeal struct {
 	DateTimeStr string
 }
 
-func (p *Pipeline) Consume(in <-chan mysqlservice.News, ctx context.Context) {
+type Pipeline struct {
+	w *worker.Worker
+}
+
+func NewPipeline() *Pipeline {
+	return &Pipeline{w: worker.New(10000)}
+}
+
+func (p *Pipeline) Consume(in <-chan mysqlservice.News) {
 	for data := range in {
-		err := global.Db.UpdateNew(data.Id, 1)
-		fmt.Println(fmt.Sprintf("%s:正在处理数据:%d", time.Now().Format("2006-01-02 15:04:05"), data.Id))
-		if err != nil {
-			fmt.Println(err)
-		}
-		//TODO 协程超时退出,数量控制
 		p.w.Run(func() {
 			news := data
 			//数据处理的主要逻辑

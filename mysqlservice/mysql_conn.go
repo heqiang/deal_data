@@ -31,12 +31,16 @@ func NewMysqlConn(config *config.MysqlConfig) *MysqlConn {
 	return &MysqlConn{Db: db}
 }
 
-// Select TODO 记录最大值实现每次查询不会查询到重复数据
-func (conn *MysqlConn) Select() (newsList []News, err error) {
-	selectResult := conn.Db.Limit(50).Where("id>?", MaxId).Where("deal_code =?", 0).Find(&newsList)
+func (conn *MysqlConn) SelectZero() (newsList []News, err error) {
+	selectResult := conn.Db.Limit(100).Where("deal_code =?", 0).Find(&newsList)
 	if selectResult.Error != nil {
 		return []News{}, selectResult.Error
 	}
+	newsId := make([]int, len(newsList))
+	for i, v := range newsList {
+		newsId[i] = v.Id
+	}
+	conn.Db.Table("news_test").Where("id in ？", newsId).Updates(map[string]interface{}{"name": "hello", "age": 18})
 	return
 }
 

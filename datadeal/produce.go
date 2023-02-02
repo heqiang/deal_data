@@ -1,32 +1,25 @@
 package datadeal
 
 import (
-	"deal_data/datadeal/worker"
 	"deal_data/global"
 	"deal_data/mysqlservice"
-	"fmt"
+	"go.uber.org/zap"
 	"time"
 )
-
-type Pipeline struct {
-	w *worker.Worker
-}
-
-func NewPipeline() *Pipeline {
-	return &Pipeline{w: worker.New(10000)}
-}
 
 func (p *Pipeline) Produce(out chan<- mysqlservice.News) {
 	for {
 		global.Cond.L.Lock()
-		news, err := global.Db.Select()
+		news, err := global.Db.SelectZero()
+
 		if err != nil {
-			fmt.Println(err)
-			time.Sleep(time.Second)
+			zap.L().Error("数据处理错误")
 			continue
 		}
-		if len(news) > 0 {
-			mysqlservice.MaxId = news[len(news)-1].Id
+
+		if len(news) == 0 {
+			time.Sleep(time.Second)
+			continue
 		}
 
 		for _, data := range news {
