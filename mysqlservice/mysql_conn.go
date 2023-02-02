@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-var MaxId int
-
 type MysqlConn struct {
 	Db *gorm.DB
 }
@@ -32,7 +30,7 @@ func NewMysqlConn(config *config.MysqlConfig) *MysqlConn {
 }
 
 func (conn *MysqlConn) SelectZero() (newsList []News, err error) {
-	selectResult := conn.Db.Limit(100).Where("deal_code =?", 0).Find(&newsList)
+	selectResult := conn.Db.Limit(50).Where("deal_code =?", 0).Find(&newsList)
 	if selectResult.Error != nil {
 		return []News{}, selectResult.Error
 	}
@@ -40,7 +38,7 @@ func (conn *MysqlConn) SelectZero() (newsList []News, err error) {
 	for i, v := range newsList {
 		newsId[i] = v.Id
 	}
-	conn.Db.Table("news_test").Where("id in ？", newsId).Updates(map[string]interface{}{"name": "hello", "age": 18})
+	conn.Db.Table("news").Where("id IN ?", newsId).Updates(map[string]interface{}{"deal_code": 1})
 	return
 }
 

@@ -30,7 +30,7 @@ type News struct {
 }
 
 func (*News) TableName() string {
-	return "news_test"
+	return "news"
 }
 
 func GetNowTime() string {

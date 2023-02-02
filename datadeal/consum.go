@@ -35,18 +35,21 @@ type Pipeline struct {
 }
 
 func NewPipeline() *Pipeline {
-	return &Pipeline{w: worker.New(10000)}
+	return &Pipeline{w: worker.New(100)}
 }
 
 func (p *Pipeline) Consume(in <-chan mysqlservice.News) {
 	for data := range in {
-		p.w.Run(func() {
+		p.w.Run(func(data mysqlservice.News) {
 			news := data
 			//数据处理的主要逻辑
 			deal := NewDataDeal(global.Proxy, news.Direction)
 			deal.TransNewsToJson(news)
-			deal.download(news.Content, news.Id)
-		})
+			go func(deal *DataDeal, news mysqlservice.News) {
+				deal.download(news.Content, news.Id)
+			}(deal, news)
+
+		}, data)
 	}
 }
 

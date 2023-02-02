@@ -1,10 +1,10 @@
 name: data_deal_dev
 mysql:
-  host: 43.153.74.252
+  host: 127.0.0.1
   port: 3306
   user: "root"
-  password: "gx_news_test@"
-  db: "news_test"
+  password: "123456"
+  db: "news"
 log:
   level: "debug"
   filename: "deal_news.log"

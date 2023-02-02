@@ -3,6 +3,7 @@ package util
 import (
 	"bufio"
 	"deal_data/global"
+	"deal_data/mysqlservice"
 	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"
@@ -60,6 +61,8 @@ func (tool *Tool) ImgOrFileDownload(filePath, fileName, url, fileType string, ne
 }
 
 func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
+	global.Mutex.Lock()
+	defer global.Mutex.Unlock()
 	jsonName := fmt.Sprintf("%s_newsty.json", tool.DateTimeStr)
 	tool.jsonPathName = filepath.Join(tool.fileDir, jsonName)
 	MkFile(tool.jsonPathName)
@@ -70,6 +73,7 @@ func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
 		return
 	}
 	defer file.Close()
+
 	byteNews, err := json.Marshal(news)
 	if err != nil {
 		zap.L().Error(fmt.Sprintf("新闻序列化失败,err:%s,新闻id：%d", err, newsId))
@@ -85,5 +89,5 @@ func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
 		zap.L().Error(fmt.Sprintf("新闻处理状态更新2失败,err:%s,debugStack:%s,新闻id:%d", err, debug.Stack(), newsId))
 		return
 	}
-	fmt.Println(fmt.Sprintf("%s:%d数据文本处理结束,更新状态为2", time.Now().Format("2006-01-02 15:04:05"), newsId))
+	fmt.Println(fmt.Sprintf("%s ->%d数据文本处理结束,更新状态为2", mysqlservice.GetNowTime(), newsId))
 }

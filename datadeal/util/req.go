@@ -1,7 +1,6 @@
 package util
 
 import (
-	"deal_data/global"
 	"fmt"
 	"go.uber.org/zap"
 	"io/ioutil"
@@ -10,29 +9,34 @@ import (
 )
 
 func Req(reqRul string, proxyIp string) ([]byte, error) {
-	var respByte []byte
-
-	client := http.Client{}
-	if proxyIp != "" {
-		uri, err := url.Parse(proxyIp)
-		if err != nil {
-			zap.L().Warn(fmt.Sprintf("parse proxyIp error: %s", err))
+	defer func() {
+		//匿名函数来捕获异常
+		if err := recover(); err != nil {
+			fmt.Println("异常", err)
 		}
-		client.Transport = &http.Transport{Proxy: http.ProxyURL(uri)}
+	}()
+
+	fmt.Println(fmt.Sprintf("正在下载图片:%s", reqRul))
+	proxy := func(_ *http.Request) (*url.URL, error) {
+		return url.Parse(proxyIp)
 	}
+	client := &http.Client{Transport: &http.Transport{Proxy: proxy}}
+
 	req, err := http.NewRequest("GET", reqRul, nil)
-	req.Header.Add("User-Agent", global.Header)
 	if err != nil {
-		zap.L().Warn(fmt.Sprintf("NewRequest Failed"))
-		return nil, nil
+		zap.L().Warn("request请求构建失败")
 	}
-	resp, err := client.Do(req)
+
+	res, err := client.Do(req)
 	if err != nil {
-		zap.L().Warn(fmt.Sprintf("url req fail,%s", reqRul))
+		zap.L().Warn(fmt.Sprintf("请求失败:%s", reqRul))
 	}
-	defer resp.Body.Close()
 
-	respByte, _ = ioutil.ReadAll(resp.Body)
-
+	defer res.Body.Close()
+	respByte, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		zap.L().Warn(fmt.Sprintf("图片响应读取失败:%s", reqRul))
+	}
+	fmt.Println(fmt.Sprintf("图片下载完毕:%s", reqRul))
 	return respByte, nil
 }
