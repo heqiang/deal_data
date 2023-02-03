@@ -23,11 +23,17 @@ func (w *Worker) Run(run func(mysql.News), data mysql.News) {
 		defer cancel()
 
 		go func(ctx context.Context, news mysql.News) {
+			ch := make(chan struct{}, 0)
 			defer func() {
 				<-w.worker
 			}()
-			run(news)
+			go func(news mysql.News) {
+				run(news)
+				ch <- struct{}{}
+			}(news)
+
 			select {
+			case <-ch:
 			case <-ctx.Done():
 				zap.L().Warn(fmt.Sprintf("图片下载超时退出,图片url:%s,新闻id:%d", news.Url, news.Id))
 			}
