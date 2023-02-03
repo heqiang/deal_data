@@ -26,7 +26,7 @@ func Req(reqRul string, proxyIp string) (io.Reader, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	fmt.Println(fmt.Sprintf("图片：%s下载完成", reqRul))
 	return resp.Body, nil
 
 }

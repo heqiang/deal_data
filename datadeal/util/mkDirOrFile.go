@@ -1,7 +1,7 @@
 package util
 
 import (
-	"deal_data/global"
+	"deal_data/config"
 	"fmt"
 	"go.uber.org/zap"
 	"io"
@@ -48,8 +48,8 @@ func MkFile(filePath string) {
 }
 
 func fileDownload(filePath, fileName string, url, proxy string, id interface{}) {
-	global.Mutex.Lock()
-	defer global.Mutex.Unlock()
+	config.Mutex.Lock()
+	defer config.Mutex.Unlock()
 
 	resReader, err := Req(url, proxy)
 	if err != nil {
@@ -68,7 +68,7 @@ func fileDownload(filePath, fileName string, url, proxy string, id interface{}) 
 
 	_, err = io.Copy(file, resReader)
 	if err != nil {
-		zap.L().Warn("file copy写入失败")
+		zap.L().Warn(fmt.Sprintf("文件:%s写入失败", url))
 		return
 	}
 

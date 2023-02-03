@@ -1,7 +1,7 @@
 package datadeal
 
 import (
-	"deal_data/global"
+	"deal_data/config"
 	"deal_data/service/mysql"
 	"go.uber.org/zap"
 	"time"
@@ -9,8 +9,8 @@ import (
 
 func (p *Pipeline) Produce(out chan<- mysql.News) {
 	for {
-		global.Cond.L.Lock()
-		news, err := global.Db.SelectZero()
+		config.Cond.L.Lock()
+		news, err := mysql.Db.SelectZero()
 
 		if err != nil {
 			zap.L().Error("数据处理错误")
@@ -25,6 +25,6 @@ func (p *Pipeline) Produce(out chan<- mysql.News) {
 		for _, data := range news {
 			out <- data
 		}
-		global.Cond.L.Unlock()
+		config.Cond.L.Unlock()
 	}
 }

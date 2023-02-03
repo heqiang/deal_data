@@ -3,7 +3,6 @@ package main
 import (
 	"deal_data/config"
 	"deal_data/datadeal"
-	"deal_data/global"
 	"deal_data/log"
 	mysqlservice2 "deal_data/service/mysql"
 	"fmt"
@@ -20,19 +19,19 @@ func main() {
 		zap.L().Error(msg)
 		return
 	}
-	global.AbsDataPath = filepath.Join(rootPath, "data")
+	config.AbsDataPath = filepath.Join(rootPath, "data")
 	// 初始化配置
 	config.InitConfig("dev")
-	err = log.InitLogger(global.ServerConfig.LogConfig, "dev")
+	err = log.InitLogger(config.Conf.LogConfig, "dev")
 	if err != nil {
 		panic(fmt.Sprintf("日志初始化错误,err:%s", err))
 	}
-	global.Db = mysqlservice2.NewMysqlConn(global.ServerConfig.MysqlConfig)
+	mysqlservice2.Db = mysqlservice2.NewMysqlConn(config.Conf.MysqlConfig)
 
 	quit := make(chan bool)
 	newsChan := make(chan mysqlservice2.News, 15)
 
-	global.Cond.L = new(sync.Mutex)
+	config.Cond.L = new(sync.Mutex)
 
 	//生产者消费者模式去处理数据
 	pipeline := datadeal.NewPipeline()

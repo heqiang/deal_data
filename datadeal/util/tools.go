@@ -2,7 +2,7 @@ package util
 
 import (
 	"bufio"
-	"deal_data/global"
+	"deal_data/config"
 	"deal_data/service/mysql"
 	"encoding/json"
 	"fmt"
@@ -27,7 +27,7 @@ type Tool struct {
 func NewTool(proxy string, fileDir, dataTimeStr string) *Tool {
 	currTime := time.Now()
 	tool := &Tool{
-		header:      global.Header,
+		header:      config.Header,
 		DateTimeStr: dataTimeStr,
 		time:        currTime.Format("2006-01-02"),
 		proxy:       proxy,
@@ -61,8 +61,8 @@ func (tool *Tool) ImgOrFileDownload(filePath, fileName, url, fileType string, ne
 }
 
 func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
-	global.Mutex.Lock()
-	defer global.Mutex.Unlock()
+	config.Mutex.Lock()
+	defer config.Mutex.Unlock()
 	jsonName := fmt.Sprintf("%s_newsty.json", tool.DateTimeStr)
 	tool.jsonPathName = filepath.Join(tool.fileDir, jsonName)
 	MkFile(tool.jsonPathName)
@@ -84,7 +84,7 @@ func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
 	_, _ = writer.WriteString(string(byteNews) + "\n")
 	_ = writer.Flush()
 
-	err = global.Db.UpdateNew(newsId, 2)
+	err = mysql.Db.UpdateNew(newsId, 2)
 	if err != nil {
 		zap.L().Error(fmt.Sprintf("新闻处理状态更新2失败,err:%s,debugStack:%s,新闻id:%d", err, debug.Stack(), newsId))
 		return

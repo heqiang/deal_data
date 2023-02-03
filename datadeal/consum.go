@@ -1,9 +1,9 @@
 package datadeal
 
 import (
+	"deal_data/config"
 	"deal_data/datadeal/util"
 	"deal_data/datadeal/worker"
-	"deal_data/global"
 	"deal_data/service/mysql"
 	"encoding/json"
 	"fmt"
@@ -42,7 +42,7 @@ func (p *Pipeline) Consume(in <-chan mysql.News) {
 		p.w.Run(func(data mysql.News) {
 			news := data
 			//数据处理的主要逻辑
-			deal := NewDataDeal(global.Proxy, news.Direction)
+			deal := NewDataDeal(config.Proxy, news.Direction)
 			deal.TransNewsToJson(news)
 			go func(deal *DataDeal, news mysql.News) {
 				deal.download(news.Content, news.Id)
@@ -58,7 +58,7 @@ func NewDataDeal(proxy, country string) *DataDeal {
 		DateTimeStr: time.Now().Format("2006010215"),
 	}
 	dataDeal.country = util.GetDirection(country)
-	dataDeal.filePath = filepath.Join(global.AbsDataPath, dataDeal.country, dataDeal.currTime)
+	dataDeal.filePath = filepath.Join(config.AbsDataPath, dataDeal.country, dataDeal.currTime)
 	dataDeal.tool = util.NewTool(proxy, dataDeal.filePath, dataDeal.DateTimeStr)
 
 	util.Mkdir(dataDeal.filePath)

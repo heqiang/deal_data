@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+var Db *MysqlConn
+
 type MysqlConn struct {
 	Db *gorm.DB
 }
