@@ -1,5 +1,4 @@
 name: data_deal_dev
-download_image: False
 mysql:
   host: 127.0.0.1
   port: 3306
