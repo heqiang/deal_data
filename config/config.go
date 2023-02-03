@@ -1,10 +1,11 @@
 package config
 
 type ServerConfig struct {
-	Name         string `mapstructure:"name"`
-	*MysqlConfig `mapstructure:"mysql"`
-	*LogConfig   `mapstructure:"log"`
-	*MqConfig    `mapstructure:"mq"`
+	Name          string `mapstructure:"name" json:"name,omitempty"`
+	DownloadImage bool   `json:"download_image,omitempty"`
+	*MysqlConfig  `mapstructure:"mysql" json:"*_mysql_config,omitempty"`
+	*LogConfig    `mapstructure:"log" json:"*_log_config,omitempty"`
+	*MqConfig     `mapstructure:"mq" json:"*_mq_config,omitempty"`
 }
 type MysqlConfig struct {
 	Host     string `json:"host" mapstructure:"host"`

@@ -4,14 +4,12 @@ import (
 	"deal_data/global"
 	"fmt"
 	"go.uber.org/zap"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 )
 
-func Req(reqRul string, proxyIp string) ([]byte, error) {
-	var respByte []byte
-
+func Req(reqRul string, proxyIp string) (io.Reader, error) {
 	client := http.Client{}
 	if proxyIp != "" {
 		uri, err := url.Parse(proxyIp)
@@ -29,10 +27,10 @@ func Req(reqRul string, proxyIp string) ([]byte, error) {
 	resp, err := client.Do(req)
 	if err != nil {
 		zap.L().Warn(fmt.Sprintf("url req fail,%s", reqRul))
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	respByte, _ = ioutil.ReadAll(resp.Body)
+	return resp.Body, nil
 
-	return respByte, nil
 }

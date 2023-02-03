@@ -1,9 +1,9 @@
 package util
 
 import (
-	"bufio"
 	"fmt"
 	"go.uber.org/zap"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -47,7 +47,7 @@ func MkFile(filePath string) {
 }
 
 func fileDownload(filePath, fileName string, url, proxy string, id interface{}) {
-	resBytes, err := Req(url, proxy)
+	resReader, err := Req(url, proxy)
 	if err != nil {
 		msg := fmt.Sprintf("文件请求失败fileUrl:%s,err:%s,新闻id或者uuid:%d", url, err, id)
 		zap.L().Error(msg)
@@ -62,7 +62,10 @@ func fileDownload(filePath, fileName string, url, proxy string, id interface{}) 
 	}
 	defer file.Close()
 
-	writer := bufio.NewWriter(file)
-	_, _ = writer.Write(resBytes)
-	_ = writer.Flush()
+	_, err = io.Copy(file, resReader)
+	if err != nil {
+		zap.L().Warn("file copy写入失败")
+		return
+	}
+
 }
