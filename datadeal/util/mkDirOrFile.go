@@ -1,6 +1,7 @@
 package util
 
 import (
+	"deal_data/global"
 	"fmt"
 	"go.uber.org/zap"
 	"io"
@@ -47,6 +48,9 @@ func MkFile(filePath string) {
 }
 
 func fileDownload(filePath, fileName string, url, proxy string, id interface{}) {
+	global.Mutex.Lock()
+	defer global.Mutex.Unlock()
+
 	resReader, err := Req(url, proxy)
 	if err != nil {
 		msg := fmt.Sprintf("文件请求失败fileUrl:%s,err:%s,新闻id或者uuid:%d", url, err, id)
