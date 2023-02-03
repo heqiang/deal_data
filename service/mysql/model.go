@@ -1,4 +1,4 @@
-package mysqlservice
+package mysql
 
 import "time"
 

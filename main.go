@@ -1,10 +1,11 @@
 package main
 
 import (
+	"deal_data/config"
 	"deal_data/datadeal"
 	"deal_data/global"
 	"deal_data/log"
-	"deal_data/mysqlservice"
+	mysqlservice2 "deal_data/service/mysql"
 	"fmt"
 	"go.uber.org/zap"
 	"os"
@@ -21,15 +22,15 @@ func main() {
 	}
 	global.AbsDataPath = filepath.Join(rootPath, "data")
 	// 初始化配置
-	global.InitConfig("dev")
+	config.InitConfig("dev")
 	err = log.InitLogger(global.ServerConfig.LogConfig, "dev")
 	if err != nil {
 		panic(fmt.Sprintf("日志初始化错误,err:%s", err))
 	}
-	global.Db = mysqlservice.NewMysqlConn(global.ServerConfig.MysqlConfig)
+	global.Db = mysqlservice2.NewMysqlConn(global.ServerConfig.MysqlConfig)
 
 	quit := make(chan bool)
-	newsChan := make(chan mysqlservice.News, 15)
+	newsChan := make(chan mysqlservice2.News, 15)
 
 	global.Cond.L = new(sync.Mutex)
 

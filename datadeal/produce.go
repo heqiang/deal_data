@@ -2,12 +2,12 @@ package datadeal
 
 import (
 	"deal_data/global"
-	"deal_data/mysqlservice"
+	"deal_data/service/mysql"
 	"go.uber.org/zap"
 	"time"
 )
 
-func (p *Pipeline) Produce(out chan<- mysqlservice.News) {
+func (p *Pipeline) Produce(out chan<- mysql.News) {
 	for {
 		global.Cond.L.Lock()
 		news, err := global.Db.SelectZero()

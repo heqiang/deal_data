@@ -1,11 +1,10 @@
 package datadeal
 
 import (
-	"deal_data/comment"
 	"deal_data/datadeal/util"
 	"deal_data/datadeal/worker"
 	"deal_data/global"
-	"deal_data/mysqlservice"
+	"deal_data/service/mysql"
 	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"
@@ -38,14 +37,14 @@ func NewPipeline() *Pipeline {
 	return &Pipeline{w: worker.New(100)}
 }
 
-func (p *Pipeline) Consume(in <-chan mysqlservice.News) {
+func (p *Pipeline) Consume(in <-chan mysql.News) {
 	for data := range in {
-		p.w.Run(func(data mysqlservice.News) {
+		p.w.Run(func(data mysql.News) {
 			news := data
 			//数据处理的主要逻辑
 			deal := NewDataDeal(global.Proxy, news.Direction)
 			deal.TransNewsToJson(news)
-			go func(deal *DataDeal, news mysqlservice.News) {
+			go func(deal *DataDeal, news mysql.News) {
 				deal.download(news.Content, news.Id)
 			}(deal, news)
 
@@ -67,24 +66,6 @@ func NewDataDeal(proxy, country string) *DataDeal {
 	return dataDeal
 }
 
-func (d *DataDeal) parseComment(articleUrl, uuid string) {
-	siteDomain := util.ParseHost(articleUrl)
-	if _, ok := comment.CommentMap[siteDomain]; ok {
-		msgInfo := map[string]string{
-			"articleUrl":      articleUrl,
-			"commentPath":     d.filePath,
-			"commentJsonName": fmt.Sprintf("%s_newsty.json", d.DateTimeStr),
-			"newUUID":         uuid,
-		}
-		msgByte, err := json.Marshal(msgInfo)
-		if err != nil {
-			zap.L().Error(fmt.Sprintf("%s序列化错误,err:%s", articleUrl, err))
-			return
-		}
-		global.RabbitMq.SentMessage(string(msgByte))
-	}
-}
-
 func (d *DataDeal) download(content string, newsId int) {
 	if content != "" {
 		var cons []oldConStruct
@@ -103,7 +84,7 @@ func (d *DataDeal) download(content string, newsId int) {
 }
 
 // TransNewsToJson 新闻数据写入json
-func (d *DataDeal) TransNewsToJson(news mysqlservice.News) {
+func (d *DataDeal) TransNewsToJson(news mysql.News) {
 	newsMap := map[string]interface{}{
 		"news_id":           news.Uuid,
 		"source_name":       news.SourceName,

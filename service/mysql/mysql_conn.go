@@ -1,4 +1,4 @@
-package mysqlservice
+package mysql
 
 import (
 	"deal_data/config"
