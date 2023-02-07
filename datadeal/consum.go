@@ -1,12 +1,14 @@
 package datadeal
 
 import (
+	"context"
 	"deal_data/config"
 	"deal_data/datadeal/util"
 	"deal_data/datadeal/worker"
 	"deal_data/service/mysql"
 	"encoding/json"
 	"fmt"
+	"github.com/avast/retry-go"
 	"go.uber.org/zap"
 	"path/filepath"
 	"time"
@@ -39,15 +41,32 @@ func NewPipeline() *Pipeline {
 
 func (p *Pipeline) Consume(in <-chan mysql.News) {
 	for data := range in {
-		p.w.Run(func(data mysql.News) {
-			news := data
-			//数据处理的主要逻辑
+		p.w.Run(func(news mysql.News) {
 			deal := NewDataDeal(config.Proxy, news.Direction)
 			deal.TransNewsToJson(news)
-			go func(deal *DataDeal, news mysql.News) {
-				deal.download(news.Content, news.Id)
-			}(deal, news)
+			ch := make(chan struct{}, 0)
 
+			retryNum := 0
+			_ = retry.Do(func() error {
+				ctx, cancel := context.WithTimeout(context.TODO(), time.Second*10)
+				defer cancel()
+
+				go func(deal *DataDeal, news mysql.News, ctx context.Context) {
+					deal.download(news.Content, news.Id)
+					ch <- struct{}{}
+				}(deal, news, ctx)
+
+				select {
+				case <-ch:
+				case <-ctx.Done():
+					retryNum++
+				}
+				return nil
+			}, retry.Attempts(5))
+
+			if retryNum == 5 {
+				zap.L().Warn(fmt.Sprintf("图片下载五次失败,新闻url:%s,新闻%d,新闻:%v", news.Url, news.Id, news))
+			}
 		}, data)
 	}
 }
@@ -55,7 +74,7 @@ func (p *Pipeline) Consume(in <-chan mysql.News) {
 func NewDataDeal(proxy, country string) *DataDeal {
 	dataDeal := &DataDeal{
 		currTime:    time.Now().Format("2006-01-02"),
-		DateTimeStr: time.Now().Format("2006010215"),
+		DateTimeStr: time.Now().Format("20060102"),
 	}
 	dataDeal.country = util.GetDirection(country)
 	dataDeal.filePath = filepath.Join(config.AbsDataPath, dataDeal.country, dataDeal.currTime)
@@ -130,15 +149,18 @@ func (d *DataDeal) transContent(contents string) []interface{} {
 	contentsList := d.transStrToList(contents)
 	if len(contentsList) >= 1 {
 		for _, con := range contentsList {
-			conStruct := con.(map[string]interface{})
-			// content中的结构转换
-			if conStruct["type"] == "image" || conStruct["type"] == "file" {
-				newCon := d.transImageOrFileCon(conStruct, conStruct["type"].(string))
-				newContent = append(newContent, newCon)
+			conStruct, ok := con.(map[string]interface{})
+			if ok {
+				if conStruct["type"] == "image" || conStruct["type"] == "file" {
+					newCon := d.transImageOrFileCon(conStruct, conStruct["type"].(string))
+					newContent = append(newContent, newCon)
+				}
+				// content中的结构转换
+				if conStruct["type"] == "text" {
+					newContent = append(newContent, conStruct)
+				}
 			}
-			if conStruct["type"] == "text" {
-				newContent = append(newContent, conStruct)
-			}
+
 		}
 	}
 	return newContent

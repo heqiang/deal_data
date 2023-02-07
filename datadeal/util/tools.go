@@ -67,7 +67,7 @@ func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
 	tool.jsonPathName = filepath.Join(tool.fileDir, jsonName)
 	MkFile(tool.jsonPathName)
 
-	file, err := os.OpenFile(tool.jsonPathName, os.O_APPEND|os.O_CREATE, 7777)
+	file, err := os.OpenFile(tool.jsonPathName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModeAppend)
 	if err != nil {
 		zap.L().Error(fmt.Sprintf("新闻写入json文件失败,err:%s,新闻id：%d", err, newsId))
 		return
@@ -81,8 +81,17 @@ func (tool *Tool) WriteNewsToJson(news map[string]interface{}, newsId int) {
 	}
 
 	writer := bufio.NewWriter(file)
-	_, _ = writer.WriteString(string(byteNews) + "\n")
-	_ = writer.Flush()
+	_, err = writer.WriteString(string(byteNews) + "\n")
+	if err != nil {
+		zap.L().Error(fmt.Sprintf("新闻写入json文件失败,新闻id:%d,err:%v,", newsId, err))
+		return
+	}
+	err = writer.Flush()
+	if err != nil {
+		fmt.Println("新闻写入json文件失败")
+		zap.L().Error(fmt.Sprintf("新闻写入json文件失败,新闻id:%d,err:%v,", newsId, err))
+		return
+	}
 
 	err = mysql.Db.UpdateNew(newsId, 2)
 	if err != nil {

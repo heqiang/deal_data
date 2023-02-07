@@ -1,15 +1,19 @@
 package util
 
 import (
+	"bufio"
 	"fmt"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
+	"strconv"
 )
 
-func Req(reqRul string, proxyIp string) (io.Reader, error) {
+func Req(reqRul, proxyIp string, dstFile *os.File) (io.Reader, error) {
 	fmt.Println(fmt.Sprintf("正在下载图片:%s", reqRul))
+
 	proxy := func(_ *http.Request) (*url.URL, error) {
 		return url.Parse(proxyIp)
 	}
@@ -26,7 +30,17 @@ func Req(reqRul string, proxyIp string) (io.Reader, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
 	fmt.Println(fmt.Sprintf("图片：%s下载完成", reqRul))
-	return resp.Body, nil
+
+	imgSize, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
+	newReader := bufio.NewReaderSize(resp.Body, imgSize)
+	_, err = io.Copy(dstFile, resp.Body)
+	if err != nil {
+		fmt.Println(err)
+		zap.L().Warn(fmt.Sprintf("文件:%s写入失败,err:%v", reqRul, err))
+		return nil, nil
+	}
+	return newReader, nil
 
 }

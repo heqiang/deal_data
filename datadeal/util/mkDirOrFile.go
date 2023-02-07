@@ -4,7 +4,6 @@ import (
 	"deal_data/config"
 	"fmt"
 	"go.uber.org/zap"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -51,24 +50,21 @@ func fileDownload(filePath, fileName string, url, proxy string, id interface{}) 
 	config.Mutex.Lock()
 	defer config.Mutex.Unlock()
 
-	resReader, err := Req(url, proxy)
+	imgFilePath := filepath.Join(filePath, fileName)
+	imageFile, err := os.OpenFile(imgFilePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 777)
 	if err != nil {
-		msg := fmt.Sprintf("文件请求失败fileUrl:%s,err:%s,新闻id或者uuid:%d", url, err, id)
+		fmt.Println(err)
+		msg := fmt.Sprintf("%s 文件创建失败", imgFilePath)
 		zap.L().Error(msg)
 		return
 	}
+	defer imageFile.Close()
 
-	imgFilePath := filepath.Join(filePath, fileName)
-	file, err := os.OpenFile(imgFilePath, os.O_WRONLY|os.O_CREATE, 0666)
+	_, err = Req(url, proxy, imageFile)
 	if err != nil {
-		msg := fmt.Sprintf("%s 文件打开失败", imgFilePath)
+		fmt.Println(err)
+		msg := fmt.Sprintf("文件请求失败fileUrl:%s,err:%s,新闻id或者uuid:%d", url, err, id)
 		zap.L().Error(msg)
-	}
-	defer file.Close()
-
-	_, err = io.Copy(file, resReader)
-	if err != nil {
-		zap.L().Warn(fmt.Sprintf("文件:%s写入失败", url))
 		return
 	}
 

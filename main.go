@@ -3,7 +3,7 @@ package main
 import (
 	"deal_data/config"
 	"deal_data/datadeal"
-	"deal_data/log"
+	"deal_data/service/log"
 	mysqlservice2 "deal_data/service/mysql"
 	"fmt"
 	"go.uber.org/zap"
@@ -29,14 +29,13 @@ func main() {
 	mysqlservice2.Db = mysqlservice2.NewMysqlConn(config.Conf.MysqlConfig)
 
 	quit := make(chan bool)
-	newsChan := make(chan mysqlservice2.News, 15)
+	newsChan := make(chan mysqlservice2.News, 100)
 
 	config.Cond.L = new(sync.Mutex)
 
 	//生产者消费者模式去处理数据
 	pipeline := datadeal.NewPipeline()
 	go pipeline.Produce(newsChan)
-
 	pipeline.Consume(newsChan)
 
 	<-quit
